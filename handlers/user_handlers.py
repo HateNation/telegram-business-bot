@@ -217,7 +217,6 @@ async def process_phone_number(message: Message, state: FSMContext):
             'user_id': message.from_user.id
         })
         
-        # Гарантируем, что пользователь существует (мог открыть /phone без /start)
         db.get_or_create_user(
             user_id=message.from_user.id,
             username=message.from_user.username,
@@ -442,7 +441,6 @@ async def finish_questionnaire(message: Message, state: FSMContext):
             
             await message.answer(result_text, reply_markup=get_main_menu())
 
-            # Отправляем анкету на почту
             try:
                 user = db.get_user_by_id(message.from_user.id)
                 subject = f"Анкета #{saved_questionnaire.id} — {user.full_name if user else message.from_user.id}"
@@ -466,7 +464,6 @@ async def finish_questionnaire(message: Message, state: FSMContext):
                         return "Крок 3 — Здоров'я"
                     return "Крок 4 — Соціальні аспекти"
 
-                # Сортируем ответы по номеру вопроса
                 ordered_answers = []
                 for _, a in answers.items():
                     ordered_answers.append(
@@ -474,7 +471,6 @@ async def finish_questionnaire(message: Message, state: FSMContext):
                     )
                 ordered_answers.sort(key=lambda x: x[0])
 
-                # Строим таблицу с шагами
                 email_body = header
                 current_step = None
                 col_width = 44
