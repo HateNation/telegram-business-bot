@@ -1,0 +1,14 @@
+.env
+.env.*
+*.db
+*.sqlite3
+__pycache__/
+.venv/
+.python-version
+*.log
+credentials.json
+token.json
+*.pem
+*.key
+*.p12
+*.der
