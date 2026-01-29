@@ -12,7 +12,7 @@ class Config:
     
     @property
     def DATABASE_URL(self):
-        # Используем SQLite
+                           
         return "sqlite:///bot_database.db"
 
 config = Config()

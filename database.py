@@ -10,19 +10,19 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
-        # Подключаемся к SQLite
+                               
         self.engine = create_engine(
             config.DATABASE_URL,
             connect_args={"check_same_thread": False},
             echo=False
         )
         self.SessionLocal = sessionmaker(bind=self.engine)
-        self.create_tables()          # Создает основные таблицы
-        self.update_tables()          # Обновляет структуру существующих таблиц
-        self.create_default_questions()  # Создает вопросы по умолчанию
+        self.create_tables()                                    
+        self.update_tables()                                                   
+        self.create_default_questions()                                
     
     def create_tables(self):
-        """Создание таблиц в базе данных"""
+                                           
         try:
             Base.metadata.create_all(bind=self.engine)
             logger.info("✅ Таблицы SQLite успешно созданы/проверены")
@@ -30,17 +30,17 @@ class Database:
             logger.error(f"❌ Ошибка при создании таблиц: {e}")
     
     def update_tables(self):
-        """Обновление структуры таблиц (добавление новых полей)"""
+                                                                  
         session = self.get_session()
         try:
-            # Проверяем, есть ли поле phone_number в таблице users
+                                                                  
             inspector = inspect(self.engine)
             columns = inspector.get_columns('users')
             column_names = [col['name'] for col in columns]
             
             logger.info(f"📊 Существующие поля в таблице users: {column_names}")
             
-            # Добавляем отсутствующие поля
+                                          
             if 'phone_number' not in column_names:
                 session.execute(text("ALTER TABLE users ADD COLUMN phone_number VARCHAR(20)"))
                 logger.info("✅ Добавлено поле phone_number в таблицу users")
@@ -63,10 +63,10 @@ class Database:
             session.close()
     
     def create_default_questions(self):
-        """Создание вопросов по умолчанию"""
+                                            
         session = self.get_session()
         try:
-            # Проверяем, есть ли вопросы
+                                        
             if session.query(Question).count() == 0:
                 default_questions = [
                     Question(question_text="Як вас звати?", question_order=1),
@@ -86,12 +86,12 @@ class Database:
             session.close()
     
     def get_session(self):
-        """Получить сессию базы данных"""
+                                         
         return self.SessionLocal()
     
-    # Методы для работы с пользователями
+                                        
     def get_or_create_user(self, user_id, username, full_name):
-        """Получить или создать пользователя"""
+                                               
         session = self.get_session()
         try:
             user = session.query(User).filter(User.user_id == user_id).first()
@@ -110,7 +110,7 @@ class Database:
             session.close()
     
     def update_user_phone(self, user_id, phone_number, formatted_phone=None):
-        """Обновить номер телефона пользователя"""
+                                                  
         session = self.get_session()
         try:
             user = session.query(User).filter(User.user_id == user_id).first()
@@ -138,16 +138,16 @@ class Database:
             session.close()
     
     def get_user_by_id(self, user_id):
-        """Получить пользователя по ID"""
+                                         
         session = self.get_session()
         try:
             return session.query(User).filter(User.user_id == user_id).first()
         finally:
             session.close()
     
-    # Методы для работы с вопросами
+                                   
     def get_active_questions(self):
-        """Получить активные вопросы"""
+                                       
         session = self.get_session()
         try:
             questions = session.query(Question).filter(
@@ -159,11 +159,11 @@ class Database:
             if not questions:
                 logger.warning("⚠️ Немає активних питань в базі!")
                 
-                # Перевіряємо, чи є взагалі питання
+                                                   
                 all_questions = session.query(Question).count()
                 logger.info(f"📊 Всього питань в базі: {all_questions}")
                 
-                # Якщо є питання, але всі неактивні, робимо їх активними
+                                                                        
                 if all_questions > 0:
                     logger.info("🔄 Активую всі питання...")
                     session.query(Question).update({Question.is_active: True})
@@ -179,7 +179,7 @@ class Database:
             session.close()
     
     def get_all_questions(self):
-        """Получить все вопросы"""
+                                  
         session = self.get_session()
         try:
             return session.query(Question).order_by(Question.question_order).all()
@@ -187,7 +187,7 @@ class Database:
             session.close()
     
     def get_question_by_id(self, question_id):
-        """Получить вопрос по ID"""
+                                   
         session = self.get_session()
         try:
             return session.query(Question).filter(Question.id == question_id).first()
@@ -195,7 +195,7 @@ class Database:
             session.close()
     
     def update_question(self, question_id, new_text):
-        """Обновить текст вопроса"""
+                                    
         session = self.get_session()
         try:
             question = session.query(Question).filter(Question.id == question_id).first()
@@ -212,7 +212,7 @@ class Database:
             session.close()
     
     def add_question(self, question_text, order):
-        """Добавить новый вопрос"""
+                                   
         session = self.get_session()
         try:
             question = Question(question_text=question_text, question_order=order)
@@ -227,18 +227,18 @@ class Database:
         finally:
             session.close()
     
-    # Методы для работы с анкетами
+                                  
     def save_questionnaire(self, user_id, answers):
-        """Сохранить анкету в базу данных"""
+                                            
         session = self.get_session()
         try:
             import json
             
-            # Логируем количество ответов
+                                         
             logger.info(f"💾 Збереження анкети для користувача {user_id}")
             logger.info(f"📊 Кількість відповідей: {len(answers)}")
             
-            # Создаем структурированные данные для сохранения
+                                                             
             answers_to_save = {}
             for question_id, answer_data in answers.items():
                 answers_to_save[str(question_id)] = {
@@ -266,7 +266,7 @@ class Database:
             session.close()
     
     def get_all_questionnaires(self):
-        """Получить все анкеты"""
+                                 
         session = self.get_session()
         try:
             return session.query(Questionnaire).order_by(Questionnaire.created_at.desc()).all()
@@ -274,7 +274,7 @@ class Database:
             session.close()
     
     def get_user_questionnaire(self, user_id):
-        """Получить анкету пользователя"""
+                                          
         session = self.get_session()
         try:
             return session.query(Questionnaire).filter(
@@ -284,7 +284,7 @@ class Database:
             session.close()
     
     def get_statistics(self):
-        """Получить статистику"""
+                                 
         session = self.get_session()
         try:
             total_users = session.query(User).count()
@@ -301,5 +301,5 @@ class Database:
         finally:
             session.close()
 
-# Создаем глобальный экземпляр базы данных
+                                          
 db = Database()

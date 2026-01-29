@@ -8,7 +8,7 @@ import sys
 import os
 from datetime import datetime
 
-# Добавляем корневую папку в путь Python
+                                        
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import config
@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
 admin_sessions = {}
 
 def user_in_admin(user_id):
-    """Проверяет, находится ли пользователь в админке"""
+                                                        
     return admin_sessions.get(user_id, False)
 
 def set_admin_session(user_id, status=True):
-    """Устанавливает статус админ-сессии"""
+                                           
     admin_sessions[user_id] = status
     
-# Состояния для админки
+                       
 class AdminStates(StatesGroup):
     waiting_for_new_question = State()
     waiting_for_edit_question_id = State()
@@ -38,11 +38,11 @@ class AdminStates(StatesGroup):
     
 
 def is_admin(user_id: int) -> bool:
-    """Проверка, является ли пользователь администратором"""
+                                                            
     return str(user_id) in config.ADMIN_ID
 
 def get_admin_menu():
-    """Меню админки"""
+                      
     from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
     
     keyboard = [
@@ -56,14 +56,14 @@ def get_admin_menu():
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
-# ========== КОМАНДА /admin ==========
+                                      
 
 @router.message(Command("admin"))
 async def cmd_admin(message: Message, state: FSMContext):
-    """Вход в админ-панель через команду /admin"""
+                                                  
     logger.info(f"🛠️ Команда /admin от пользователя {message.from_user.id}")
     
-    # Очищаем состояние
+                       
     await state.clear()
     
     if not is_admin(message.from_user.id):
@@ -83,14 +83,14 @@ async def cmd_admin(message: Message, state: FSMContext):
     await message.answer(welcome_text, reply_markup=get_admin_menu())
     logger.info(f"✅ Админка открыта для пользователя {message.from_user.id}")
 
-# ========== ВЫХОД ИЗ АДМИНКИ ==========
+                                        
 
 @router.message(F.text == "⬅️ Выйти из админки")
 async def exit_admin(message: Message, state: FSMContext):
-    """Выход из админки через ReplyKeyboard"""
+                                              
     await state.clear()
     
-    # Снимаем флаг админки
+                          
     set_admin_session(message.from_user.id, False)
     
     await message.answer(
@@ -102,30 +102,30 @@ async def exit_admin(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "admin_exit")
 async def handle_admin_exit(callback: CallbackQuery, state: FSMContext):
-    """Выход из админки через InlineKeyboard"""
+                                               
     await state.clear()
     
-    # Снимаем флаг админки
+                          
     set_admin_session(callback.from_user.id, False)
     
-    # Удаляем клавиатуру из сообщения
+                                     
     await callback.message.edit_reply_markup(reply_markup=None)
     
-    # Отправляем сообщение с главным меню
+                                         
     await callback.message.answer(
         "✅ Вы вышли из панели администратора.",
         reply_markup=get_main_menu()
     )
     
-    # Подтверждаем callback
+                           
     await callback.answer()
     logger.info(f"👤 Пользователь {callback.from_user.id} вышел из админки (inline)")
 
-# ========== УПРАВЛЕНИЕ ВОПРОСАМИ ==========
+                                            
 
 @router.message(F.text == "📋 Список вопросов")
 async def show_questions_list(message: Message):
-    """Показать список всех вопросов"""
+                                       
     if not is_admin(message.from_user.id):
         return
     
@@ -147,7 +147,7 @@ async def show_questions_list(message: Message):
 
 @router.message(F.text == "➕ Добавить вопрос")
 async def add_question_start(message: Message, state: FSMContext):
-    """Начало добавления нового вопроса"""
+                                          
     if not is_admin(message.from_user.id):
         return
     
@@ -160,7 +160,7 @@ async def add_question_start(message: Message, state: FSMContext):
 
 @router.message(AdminStates.waiting_for_new_question)
 async def add_question_process(message: Message, state: FSMContext):
-    """Обработка нового вопроса"""
+                                  
     if not is_admin(message.from_user.id):
         await state.clear()
         return
@@ -175,7 +175,7 @@ async def add_question_process(message: Message, state: FSMContext):
         await message.answer("❌ Текст вопроса не может быть пустым. Попробуйте снова:")
         return
     
-    # Определяем порядок (последний порядок + 1)
+                                                
     questions = db.get_all_questions()
     next_order = max([q.question_order for q in questions], default=0) + 1 if questions else 1
     
@@ -199,7 +199,7 @@ async def add_question_process(message: Message, state: FSMContext):
 
 @router.message(F.text == "✏️ Редактировать вопрос")
 async def edit_question_start(message: Message, state: FSMContext):
-    """Начало редактирования вопроса"""
+                                       
     if not is_admin(message.from_user.id):
         return
     
@@ -212,7 +212,7 @@ async def edit_question_start(message: Message, state: FSMContext):
     questions_text = "✏️ Редактирование вопроса\n\n"
     questions_text += "Введите ID вопроса для редактирования:\n\n"
     
-    for q in questions[:10]:  # Показываем первые 10
+    for q in questions[:10]:                        
         status = "✅" if q.is_active else "❌"
         questions_text += f"ID: {q.id} {status} - {q.question_text[:50]}...\n"
     
@@ -224,7 +224,7 @@ async def edit_question_start(message: Message, state: FSMContext):
 
 @router.message(AdminStates.waiting_for_edit_question_id)
 async def edit_question_id_process(message: Message, state: FSMContext):
-    """Обработка ID вопроса для редактирования"""
+                                                 
     if not is_admin(message.from_user.id):
         await state.clear()
         return
@@ -255,7 +255,7 @@ async def edit_question_id_process(message: Message, state: FSMContext):
 
 @router.message(AdminStates.waiting_for_edit_question_text)
 async def edit_question_text_process(message: Message, state: FSMContext):
-    """Обработка нового текста вопроса"""
+                                         
     if not is_admin(message.from_user.id):
         await state.clear()
         return
@@ -281,11 +281,11 @@ async def edit_question_text_process(message: Message, state: FSMContext):
     
     await state.clear()
 
-# ========== ПРОСМОТР АНКЕТ ==========
+                                      
 
 @router.message(F.text == "📊 Просмотр анкет")
 async def view_questionnaires(message: Message):
-    """Просмотр всех анкет"""
+                             
     if not is_admin(message.from_user.id):
         return
     
@@ -295,7 +295,7 @@ async def view_questionnaires(message: Message):
         await message.answer("📭 Анкет пока нет.")
         return
     
-    # Показываем последние 3 анкеты
+                                   
     for i, questionnaire in enumerate(questionnaires[:3], 1):
         user = db.get_user_by_id(questionnaire.user_id)
         answers = questionnaire.get_answers()
@@ -307,7 +307,7 @@ async def view_questionnaires(message: Message):
         result_text += f"📊 Ответов: {len(answers)}\n"
         result_text += f"📅 Дата: {questionnaire.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
         
-        # Показываем первые 3 ответа
+                                    
         if answers:
             result_text += "📝 Ответы:\n"
             for j, (q_id, answer_data) in enumerate(list(answers.items())[:3], 1):
@@ -319,11 +319,11 @@ async def view_questionnaires(message: Message):
     if len(questionnaires) > 3:
         await message.answer(f"📄 Показано 3 из {len(questionnaires)} анкет. Всего анкет: {len(questionnaires)}")
 
-# ========== УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ==========
+                                                 
 
 @router.message(F.text == "👥 Пользователи")
 async def view_users(message: Message):
-    """Просмотр пользователей"""
+                                
     if not is_admin(message.from_user.id):
         return
     
@@ -344,7 +344,7 @@ async def view_users(message: Message):
             result_text += f"   🆔 @{user.username or user.user_id}\n"
             result_text += f"   📅 Регистрация: {user.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
         
-        # Статистика по телефонам
+                                 
         total_users = session.query(User).count()
         users_with_phones = session.query(User).filter(
             User.phone_number != None,
@@ -364,26 +364,26 @@ async def view_users(message: Message):
     finally:
         session.close()
 
-# ========== СТАТИСТИКА ==========
+                                  
 
 @router.message(F.text == "📈 Статистика")
 async def show_statistics(message: Message):
-    """Показать статистику"""
+                             
     if not is_admin(message.from_user.id):
         return
     
     stats = db.get_statistics()
     
-    # Дополнительная статистика
+                               
     session = db.get_session()
     try:
-        # Статистика по пользователям с телефонами
+                                                  
         users_with_phones = session.query(User).filter(
             User.phone_number != None,
             User.phone_number != "Не вказано"
         ).count()
         
-        # Статистика по анкетам за сегодня
+                                          
         today = datetime.utcnow().date()
         today_questionnaires = session.query(Questionnaire).filter(
             Questionnaire.created_at >= datetime(today.year, today.month, today.day)
@@ -408,7 +408,7 @@ async def show_statistics(message: Message):
         
     except Exception as e:
         logger.error(f"Ошибка при получении статистики: {e}")
-        # Если есть ошибка, показываем базовую статистику
+                                                         
         basic_stats = (
             "📊 Базовая статистика\n\n"
             f"👥 Пользователей: {stats['total_users']}\n"
@@ -420,24 +420,24 @@ async def show_statistics(message: Message):
     finally:
         session.close()
 
-# ========== ОБРАБОТКА ОСТАЛЬНЫХ СООБЩЕНИЙ В АДМИНКЕ ==========
+                                                               
 
 @router.message()
 async def handle_admin_other_messages(message: Message, state: FSMContext):
-    """Обработка прочих сообщений в админке"""
-    # Проверяем, находится ли пользователь в админке
+                                              
+                                                    
     current_state = await state.get_state()
     
-    # Если мы в состоянии админки (ожидание ввода вопроса и т.д.)
+                                                                 
     if current_state in [
         AdminStates.waiting_for_new_question,
         AdminStates.waiting_for_edit_question_id,
         AdminStates.waiting_for_edit_question_text
     ]:
-        # Эти состояния обрабатываются специальными хендлерами выше
+                                                                   
         return
     
-    # Если пользователь админ, но отправил неизвестное сообщение в админке
+                                                                          
     if is_admin(message.from_user.id):
         await message.answer(
             "❓ Неизвестная команда в админке.\n\n"

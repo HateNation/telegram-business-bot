@@ -2,20 +2,20 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 def get_main_menu():
-    """Главное меню"""
+                      
     builder = ReplyKeyboardBuilder()
     
     builder.button(text="📝 Начать анкету")
     builder.button(text="📊 Моя анкета")
     builder.button(text="📱 Оновити номер")
     builder.button(text="ℹ️ О боте")
-    builder.button(text="🛠️ Админка")  # Кнопка админки
+    builder.button(text="🛠️ Админка")                  
     
     builder.adjust(2, 2, 1)
     return builder.as_markup(resize_keyboard=True, input_field_placeholder="Оберіть дію...")
 
 def get_phone_request_keyboard():
-    """Клавиатура для запроса номера телефона"""
+                                                
     builder = ReplyKeyboardBuilder()
     
     builder.button(text="📱 Відправити номер", request_contact=True)
@@ -26,7 +26,7 @@ def get_phone_request_keyboard():
     return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
 def get_admin_menu():
-    """Меню админки (старое)"""
+                               
     keyboard = [
         [KeyboardButton(text="📊 Посмотреть все анкеты")],
         [KeyboardButton(text="❓ Управление вопросами")],
@@ -37,7 +37,7 @@ def get_admin_menu():
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 def get_questions_management_keyboard():
-    """Клавиатура для управления вопросами"""
+                                             
     builder = InlineKeyboardBuilder()
     
     builder.button(text="📝 Редактировать вопрос", callback_data="edit_question")

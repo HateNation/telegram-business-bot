@@ -13,8 +13,8 @@ class User(Base):
     user_id = Column(Integer, unique=True, nullable=False)
     username = Column(String(100))
     full_name = Column(String(200))
-    phone_number = Column(String(20))  # Поле для номера телефона
-    formatted_phone = Column(String(30))  # Форматированный номер для отображения
+    phone_number = Column(String(20))                            
+    formatted_phone = Column(String(30))                                         
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -26,24 +26,24 @@ class Questionnaire(Base):
     
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
-    answers = Column(Text)  # JSON строка с ответами
+    answers = Column(Text)                          
     status = Column(String(20), default='completed')
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def get_answers(self):
-        """Получить ответы в виде словаря"""
+                                            
         try:
             return json.loads(self.answers) if self.answers else {}
         except json.JSONDecodeError:
             return {}
     
     def set_answers(self, answers_dict):
-        """Установить ответы из словаря"""
+                                          
         self.answers = json.dumps(answers_dict, ensure_ascii=False)
         
     def get_formatted_answers(self):
-        """Получить отформатированные ответы для отображения"""
+                                                               
         answers = self.get_answers()
         formatted = []
         
@@ -55,7 +55,7 @@ class Questionnaire(Base):
                 'question_number': answer_data.get('question_number', 0)
             })
         
-        # Сортируем по номеру вопроса
+                                     
         formatted.sort(key=lambda x: x.get('question_number', 0))
         return formatted
 

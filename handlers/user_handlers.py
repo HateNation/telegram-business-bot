@@ -12,7 +12,7 @@ from datetime import datetime
 from texts.welcome_text import WELCOME_TEXT
 from handlers.admin_handlers import user_in_admin, set_admin_session
 
-# Добавляем корневую папку в путь Python
+                                        
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import db
@@ -25,13 +25,13 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 class QuestionnaireStates(StatesGroup):
-    """Состояния для анкеты"""
-    waiting_for_phone = State()      # Ожидание номера телефона
-    asking_questions = State()       # Задаем вопросы анкеты
-    answers = State()                # Сохраненные ответы
+                              
+    waiting_for_phone = State()                                
+    asking_questions = State()                              
+    answers = State()                                    
 
 def parse_question_options(question_text):
-    """Извлечь варианты ответов из текста вопроса (строки с '• ')."""
+                                                                     
     if not question_text:
         return []
     options = []
@@ -42,14 +42,14 @@ def parse_question_options(question_text):
     return options
 
 def strip_question_options(question_text):
-    """Убрать варианты ответов из текста вопроса (оставить только заголовок)."""
+                                                                                
     if not question_text:
         return ""
     lines = question_text.splitlines()
     return lines[0].strip() if lines else question_text
 
 def build_options_inline_keyboard(options):
-    """Inline-клавиатура с вариантами ответов."""
+                                                 
     if not options:
         return None
     builder = InlineKeyboardBuilder()
@@ -59,7 +59,7 @@ def build_options_inline_keyboard(options):
     return builder.as_markup()
 
 def get_phone_request_keyboard():
-    """Клавиатура для запроса номера телефона"""
+                                                
     keyboard = [
         [KeyboardButton(text="📱 Відправити номер", request_contact=True)],
         [KeyboardButton(text="✏️ Ввести вручну")],
@@ -68,52 +68,52 @@ def get_phone_request_keyboard():
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
 
 def validate_ukrainian_phone(phone):
-    """Валидация украинского номера телефона"""
+                                               
     if not phone:
         return False
     
-    # Убираем все нецифровые символы
+                                    
     cleaned = re.sub(r'\D', '', phone)
     
-    # Украинские номера начинаются с 380, затем 9 цифр (всего 12 цифр)
+                                                                      
     if cleaned.startswith('380'):
         if len(cleaned) == 12:
             return f"+{cleaned}"
     
-    # Если номер начинается с 0 (например, 0671234567)
+                                                      
     elif cleaned.startswith('0') and len(cleaned) == 10:
         return f"+38{cleaned}"
     
-    # Если номер начинается с +380
+                                  
     elif phone.startswith('+380'):
-        cleaned_plus = re.sub(r'\D', '', phone[1:])  # Убираем + и все нецифры
+        cleaned_plus = re.sub(r'\D', '', phone[1:])                           
         if len(cleaned_plus) == 12:
             return phone
     
-    # Если ввели без кода страны (например, 0671234567)
+                                                       
     elif len(cleaned) == 10 and cleaned.startswith(('050', '066', '095', '099', '063', '073', '093', '067', '068', '096', '097', '098')):
         return f"+38{cleaned}"
     
     return None
 
 def format_ukrainian_phone(phone):
-    """Форматирование украинского номера телефона"""
+                                                    
     cleaned = re.sub(r'\D', '', phone)
     
     if len(cleaned) == 12 and cleaned.startswith('380'):
-        # Формат: +380 (XX) XXX-XX-XX
+                                     
         return f"+{cleaned[:3]} ({cleaned[3:5]}) {cleaned[5:8]}-{cleaned[8:10]}-{cleaned[10:12]}"
     elif len(cleaned) == 12 and cleaned.startswith('38'):
-        # Формат: +38 (0XX) XXX-XX-XX
+                                     
         return f"+{cleaned[:2]} ({cleaned[2:5]}) {cleaned[5:8]}-{cleaned[8:10]}-{cleaned[10:12]}"
     elif len(cleaned) == 10:
-        # Формат: +38 (0XX) XXX-XX-XX
+                                     
         return f"+38 ({cleaned[:3]}) {cleaned[3:6]}-{cleaned[6:8]}-{cleaned[8:10]}"
     else:
         return phone
 
 async def save_phone_to_db(user_id, phone_number, formatted_phone):
-    """Сохранить номер телефона в базу данных"""
+                                                
     try:
         success = db.update_user_phone(user_id, phone_number, formatted_phone)
         if success:
@@ -127,11 +127,11 @@ async def save_phone_to_db(user_id, phone_number, formatted_phone):
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
-    """Обработчик команды /start"""
-    # Очищаем состояние
+                                   
+                       
     await state.clear()
     
-    # Создаем или получаем пользователя
+                                       
     user = db.get_or_create_user(
         user_id=message.from_user.id,
         username=message.from_user.username,
@@ -145,10 +145,10 @@ async def cmd_start(message: Message, state: FSMContext):
 
 @router.message(QuestionnaireStates.waiting_for_phone)
 async def process_phone_number(message: Message, state: FSMContext):
-    """Обработка номера телефона"""
+                                   
     phone_number = None
     
-    # Проверяем, отправил ли пользователь контакт
+                                                 
     if message.contact:
         phone_number = message.contact.phone_number
         logger.info(f"Отримано контакт: {phone_number}")
@@ -160,7 +160,7 @@ async def process_phone_number(message: Message, state: FSMContext):
         )
         return
     
-    # Или ввел номер вручную
+                            
     elif message.text:
         user_input = message.text.strip()
         
@@ -182,7 +182,7 @@ async def process_phone_number(message: Message, state: FSMContext):
             return
         
         else:
-            # Валидируем номер
+                              
             if user_input == "📱 Відправити номер":
                 await message.answer(
                     "⚠️ Контакт не надіслано. Дозвольте відправку контакту у Telegram "
@@ -207,10 +207,10 @@ async def process_phone_number(message: Message, state: FSMContext):
                 return
     
     if phone_number:
-        # Форматируем номер для красивого отображения
+                                                     
         formatted_phone = format_ukrainian_phone(phone_number)
         
-        # Сохраняем номер телефона в состоянии
+                                              
         await state.update_data({
             'phone_number': phone_number,
             'formatted_phone': formatted_phone,
@@ -223,10 +223,10 @@ async def process_phone_number(message: Message, state: FSMContext):
             full_name=message.from_user.full_name
         )
 
-        # Сохраняем номер в базу данных
+                                       
         await save_phone_to_db(message.from_user.id, phone_number, formatted_phone)
         
-        # Показываем меню
+                         
         menu_text = (
             f"✅ Номер телефону збережено: {formatted_phone}\n\n"
             "Тепер ви можете розпочати заповнення анкети."
@@ -236,19 +236,19 @@ async def process_phone_number(message: Message, state: FSMContext):
 
 @router.message(F.text == "📝 Начать анкету")
 async def start_questionnaire(message: Message, state: FSMContext):
-    """Начало заполнения анкеты"""
-    # Получаем активные вопросы
+                                  
+                               
     questions = db.get_active_questions()
     
     if not questions:
         await message.answer("❌ Питання для анкети тимчасово відсутні.")
         return
     
-    # Проверяем, есть ли сохраненный номер телефона
+                                                   
     user = db.get_user_by_id(message.from_user.id)
     
     if not user or not user.phone_number or user.phone_number == "Не вказано":
-        # Если номера нет, запрашиваем его
+                                          
         await message.answer(
             "📱 Для початку анкети потрібен ваш номер телефону.\n\n"
             "Будь ласка, відправте номер:",
@@ -257,7 +257,7 @@ async def start_questionnaire(message: Message, state: FSMContext):
         await state.set_state(QuestionnaireStates.waiting_for_phone)
         return
     
-    # Инициализируем данные анкеты
+                                  
     await state.update_data({
         'questions': questions,
         'current_question_index': 0,
@@ -267,17 +267,17 @@ async def start_questionnaire(message: Message, state: FSMContext):
         'formatted_phone': user.formatted_phone if user.formatted_phone else user.phone_number
     })
     
-    # Показываем первый вопрос
+                              
     await ask_next_question(message, state)
 
 async def ask_next_question(message: Message, state: FSMContext):
-    """Задать следующий вопрос"""
+                                 
     data = await state.get_data()
     questions = data.get('questions', [])
     current_index = data.get('current_question_index', 0)
     
     if current_index >= len(questions):
-        # Все вопросы отвечены
+                              
         await finish_questionnaire(message, state)
         return
     
@@ -285,23 +285,23 @@ async def ask_next_question(message: Message, state: FSMContext):
     
     options = parse_question_options(question.question_text)
     prompt = "✍️ Напишіть вашу відповідь:" if not options else "👇 Оберіть варіант відповіді:"
-    # Формируем текст вопроса
+                             
     question_text = (
         f"📝 Питання {current_index + 1}/{len(questions)}\n\n"
         f"❓ {question.question_text}\n\n"
         f"{prompt}"
     )
     
-    # Отправляем вопрос
+                       
     reply_markup = build_options_inline_keyboard(options) if options else ReplyKeyboardRemove()
     await message.answer(question_text, reply_markup=reply_markup)
     
-    # Устанавливаем состояние ожидания ответа
+                                             
     await state.set_state(QuestionnaireStates.asking_questions)
 
 @router.message(QuestionnaireStates.asking_questions)
 async def process_answer(message: Message, state: FSMContext):
-    """Обработка ответа пользователя"""
+                                       
     if not message.text:
         await message.answer("⚠️ Будь ласка, надішліть відповідь текстом.")
         return
@@ -309,7 +309,7 @@ async def process_answer(message: Message, state: FSMContext):
 
 @router.callback_query(F.data.startswith("qopt:"))
 async def process_option_callback(callback: CallbackQuery, state: FSMContext):
-    """Обработка выбора варианта ответа через inline-кнопки."""
+                                                               
     current_state = await state.get_state()
     if current_state != QuestionnaireStates.asking_questions:
         await callback.answer()
@@ -340,7 +340,7 @@ async def process_option_callback(callback: CallbackQuery, state: FSMContext):
     await handle_answer(callback.message, state, user_answer)
 
 async def handle_answer(message: Message, state: FSMContext, user_answer: str):
-    """Сохранить ответ и перейти к следующему вопросу."""
+                                                         
     data = await state.get_data()
     questions = data.get('questions', [])
     current_index = data.get('current_question_index', 0)
@@ -350,12 +350,12 @@ async def handle_answer(message: Message, state: FSMContext, user_answer: str):
         question = questions[current_index]
         options = parse_question_options(question.question_text)
         
-        # Проверяем, не пустой ли ответ
+                                       
         if not user_answer:
             await message.answer("⚠️ Будь ласка, напишіть відповідь на питання.")
             return
         
-        # Обработка команды "пропустить"
+                                        
         if user_answer.lower() in ['пропустити', 'пропустить', 'skip', 'pass']:
             user_answer = "❌ Питання пропущено"
             await message.answer(
@@ -374,7 +374,7 @@ async def handle_answer(message: Message, state: FSMContext, user_answer: str):
                 reply_markup=ReplyKeyboardRemove()
             )
         
-        # Сохраняем ответ
+                         
         answers[question.id] = {
             'question_id': question.id,
             'question_text': question.question_text,
@@ -382,24 +382,24 @@ async def handle_answer(message: Message, state: FSMContext, user_answer: str):
             'question_number': current_index + 1
         }
         
-        # Увеличиваем индекс вопроса
+                                    
         next_index = current_index + 1
         
-        # Обновляем данные состояния
+                                    
         await state.update_data({
             'answers': answers,
             'current_question_index': next_index
         })
         
-        # Небольшая пауза перед следующим вопросом
+                                                  
         import asyncio
         await asyncio.sleep(0.5)
         
-        # Показываем следующий вопрос
+                                     
         await ask_next_question(message, state)
 
 async def finish_questionnaire(message: Message, state: FSMContext):
-    """Завершение анкеты и сохранение в базу"""
+                                               
     data = await state.get_data()
     answers = data.get('answers', {})
     total_questions = data.get('total_questions', 0)
@@ -411,14 +411,14 @@ async def finish_questionnaire(message: Message, state: FSMContext):
         return
     
     try:
-        # Сохраняем анкету в базу данных
+                                        
         saved_questionnaire = db.save_questionnaire(
             user_id=message.from_user.id,
             answers=answers
         )
         
         if saved_questionnaire:
-            # Формируем итоговое сообщение
+                                          
             result_text = "🎉 Анкету успішно збережено!\n\n"
             result_text += f"📱 Ваш номер: {phone_number}\n\n"
             result_text += "📋 Ваші відповіді:\n\n"
@@ -499,12 +499,12 @@ async def finish_questionnaire(message: Message, state: FSMContext):
         logger.error(f"Помилка при збереженні анкети: {e}")
         await message.answer("❌ Сталася помилка при збереженні анкети.")
     
-    # Очищаем состояние
+                       
     await state.clear()
 
 @router.message(F.text == "📊 Моя анкета")
 async def show_my_questionnaire(message: Message):
-    """Показать анкету пользователя"""
+                                      
     questionnaire = db.get_user_questionnaire(message.from_user.id)
     
     if questionnaire:
@@ -514,14 +514,14 @@ async def show_my_questionnaire(message: Message):
             await message.answer("❌ У вашій анкеті немає відповідей.")
             return
         
-        # Получаем данные пользователя для номера телефона
+                                                          
         user = db.get_user_by_id(message.from_user.id)
         phone_number = user.formatted_phone if user and user.formatted_phone else (user.phone_number if user and user.phone_number else 'Не вказано')
         
         result_text = f"📋 Ваша остання анкета\n"
         result_text += f"📱 Номер: {phone_number}\n\n"
         
-        # Преобразуем ответы в список и сортируем по номеру вопроса
+                                                                   
         answers_list = []
         for question_id, answer_data in answers.items():
             answers_list.append({
@@ -530,7 +530,7 @@ async def show_my_questionnaire(message: Message):
                 'answer': answer_data.get('answer', '')
             })
         
-        # Сортируем по номеру вопроса
+                                     
         answers_list.sort(key=lambda x: x['number'])
         
         for i, answer_data in enumerate(answers_list, 1):
@@ -550,7 +550,7 @@ async def show_my_questionnaire(message: Message):
 
 @router.message(F.text == "ℹ️ О боте")
 async def about_bot(message: Message):
-    """Информация о боте"""
+                           
     about_text = (
         "🤖 Інформація про бота\n\n"
         "Цей бот призначений для заповнення анкет.\n\n"
@@ -565,7 +565,7 @@ async def about_bot(message: Message):
 
 @router.message(Command("help"))
 async def cmd_help(message: Message):
-    """Справка по командам"""
+                             
     help_text = (
         "📋 Доступні команди:\n\n"
         "/start - Почати роботу з ботом\n"
@@ -581,7 +581,7 @@ async def cmd_help(message: Message):
 
 @router.message(Command("cancel"))
 async def cmd_cancel(message: Message, state: FSMContext):
-    """Отмена текущей анкеты"""
+                               
     current_state = await state.get_state()
     
     if current_state == QuestionnaireStates.asking_questions:
@@ -609,23 +609,23 @@ async def cmd_cancel(message: Message, state: FSMContext):
 
 @router.message(Command("phone"))
 async def cmd_phone(message: Message, state: FSMContext):
-    """Команда для обновления номера телефона"""
+                                                
     await state.clear()
     
-    # Запрашиваем новый номер телефона
+                                      
     await message.answer(
         "📱 Введіть новий номер телефону або натисніть '📱 Відправити номер':",
         reply_markup=get_phone_request_keyboard()
     )
     await state.set_state(QuestionnaireStates.waiting_for_phone)
 
-# ========== ЕДИНСТВЕННЫЙ ОБЩИЙ ОБРАБОТЧИК ==========
+                                                     
 
 @router.message()
 async def handle_all_messages(message: Message, state: FSMContext):
-    """Обработчик ВСЕХ сообщений - должен быть ПОСЛЕДНИМ в файле"""
+                                                                   
     
-    # Пропускаем команды
+                        
     if message.text and message.text.startswith('/'):
         if message.text == '/admin' or message.text.startswith('/admin '):
             return  

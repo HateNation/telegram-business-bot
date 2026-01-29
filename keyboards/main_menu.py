@@ -2,7 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def get_main_menu():
-    """Главное меню"""
+                      
     keyboard = [
         [KeyboardButton(text="📝 Начать анкету")],
         [KeyboardButton(text="ℹ️ О боте"), KeyboardButton(text="📊 Моя анкета")]
@@ -10,14 +10,14 @@ def get_main_menu():
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 def get_confirmation_keyboard():
-    """Клавиатура подтверждения понимания вопроса"""
+                                                    
     keyboard = InlineKeyboardBuilder()
     keyboard.button(text="✅ Понятно, продолжаем", callback_data="confirm_understand")
     keyboard.button(text="❌ Не понятно", callback_data="not_understand")
     return keyboard.as_markup()
 
 def get_admin_menu():
-    """Меню админки"""
+                      
     keyboard = [
         [KeyboardButton(text="📊 Посмотреть все анкеты")],
         [KeyboardButton(text="❓ Управление вопросами")],
@@ -27,7 +27,7 @@ def get_admin_menu():
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 def get_questions_management_keyboard():
-    """Клавиатура для управления вопросами"""
+                                             
     keyboard = InlineKeyboardBuilder()
     keyboard.button(text="📝 Редактировать вопрос", callback_data="edit_question")
     keyboard.button(text="➕ Добавить вопрос", callback_data="add_question")
